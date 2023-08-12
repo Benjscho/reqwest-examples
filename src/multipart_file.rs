@@ -4,20 +4,23 @@ use reqwest;
 pub async fn main() {
     let url = "http://mockbin.com/har";
 
-    let file = tokio::fs::File::open("./test/test-file.txt").await.unwrap();
-    let stream = tokio_util::codec::FramedRead::new(file, tokio_util::codec::BytesCodec::new());
-    let body = reqwest::Body::wrap_stream(stream);
-
-    let f = reqwest::multipart::Part::stream(body)
-        .file_name("test-file.txt")
-        .mime_str("text/plain").unwrap();
+    async fn file_to_part(file_name: &'static str) -> reqwest::multipart::Part {
+        let file = tokio::fs::File::open(file_name).await.unwrap();
+        let stream = tokio_util::codec::FramedRead::new(file, tokio_util::codec::BytesCodec::new());
+        let body = reqwest::Body::wrap_stream(stream);
+        reqwest::multipart::Part::stream(body)
+            .file_name(file_name)
+            .mime_str("text/plain").unwrap()
+    }
 
     let form = reqwest::multipart::Form::new()
-        .part("file", f);
+        .part("foo", file_to_part("test/fixtures/files/hello.txt").await);
+    let mut headers = reqwest::header::HeaderMap::new();
 
     let client = reqwest::Client::new();
     let response = client.post(url)
         .multipart(form)
+        .headers(headers)
         .send()
         .await;
 
