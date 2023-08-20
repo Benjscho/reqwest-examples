@@ -19,3 +19,6 @@ This will run the `main.rs` file, which runs each of the fixture
 examples found in `./src` in turn. 
 
 These examples all use tokio as the async runtime. 
+
+These examples use [mockbin](http://mockbin.com) to send 
+requests to, and display the responses.
